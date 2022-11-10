@@ -186,7 +186,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultColor: {r: 1, g: 1, b: 1, a: 1}
-  blockedColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  blockedColor: {r: 0, g: 0, b: 0, a: 1}
+  exploredColor: {r: 0.8773585, g: 0.397, b: 0, a: 1}
+  pathColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
 --- !u!1 &1135476807208350025
 GameObject:
   m_ObjectHideFlags: 0
