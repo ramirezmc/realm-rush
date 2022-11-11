@@ -4,10 +4,12 @@ using UnityEngine;
 
 public class Pathfinder : MonoBehaviour
 {
-	Node startNode;
 	[SerializeField]Vector2Int startCoords;
-	Node endNode;
+	public Vector2Int StartCoords {get {return startCoords;}}
 	[SerializeField]Vector2Int endCoords;
+	public Vector2Int EndCoords {get {return endCoords;}}
+	Node startNode;
+	Node endNode;
 	Node currentSearchNode;
 	
 	Queue<Node> frontier = new Queue<Node>();
@@ -24,17 +26,29 @@ public class Pathfinder : MonoBehaviour
 		if (gridManager != null)
 		{
 			grid = gridManager.Grid;
+			startNode = grid[startCoords];
+			endNode = grid[endCoords];
+			
 		}
-		
-		startNode = new Node(startCoords, true);
-		endNode = new Node(endCoords, true);
 	}
 	
     void Start()
-    {
-	    BreadthFirstSearch();
+	{
+		GetNewPath();
     }
     
+	public List<Node> GetNewPath()
+	{
+		return GetNewPath(startCoords);
+	}
+	
+	public List<Node> GetNewPath(Vector2Int coordinates)
+	{
+		gridManager.ResetNodes();
+		BreadthFirstSearch(coordinates);
+		return BuildPath();
+	}
+	
 	void ExploreNeighbors()
 	{
 		List<Node>Neighbors = new List<Node>();
@@ -50,6 +64,7 @@ public class Pathfinder : MonoBehaviour
 		{
 			if(!reached.ContainsKey(neighbor.coordinates) && neighbor.isWalkable)
 			{
+				neighbor.connectedTo = currentSearchNode;
 				reached.Add(neighbor.coordinates, neighbor);
 				frontier.Enqueue(neighbor);
 			}
@@ -57,12 +72,18 @@ public class Pathfinder : MonoBehaviour
 	}
     
     
-	void BreadthFirstSearch()
+	void BreadthFirstSearch(Vector2Int coordinates)
 	{
+		startNode.isWalkable = true;
+		endNode.isWalkable = true;
+		
+		frontier.Clear();
+		reached.Clear();
+		
 		bool isRunning = true;
 		
-		frontier.Enqueue(startNode);
-		reached.Add(startCoords, startNode);
+		frontier.Enqueue(grid[coordinates]);
+		reached.Add(coordinates, grid[coordinates]);
 		
 		while(frontier.Count > 0 && isRunning)
 		{
@@ -74,5 +95,47 @@ public class Pathfinder : MonoBehaviour
 				isRunning = false;
 			}
 		}
+	}
+	
+	List<Node> BuildPath()
+	{
+		List<Node> path = new List<Node>();
+		Node currentNode = endNode;
+		
+		path.Add(currentNode);
+		currentNode.isPath = true;
+		
+		while(currentNode.connectedTo != null)
+		{
+			currentNode = currentNode.connectedTo;
+			path.Add(currentNode);
+			currentNode.isPath = true;
+		}
+		path.Reverse();
+		
+		return path;
+	}
+	
+	public bool WillBlockPath(Vector2Int coordinates)
+	{
+		if(grid.ContainsKey(coordinates))
+		{
+			bool previousState = grid[coordinates].isWalkable;
+			grid[coordinates].isWalkable = false;
+			List<Node> NewPath = GetNewPath();
+			grid[coordinates].isWalkable = previousState;
+			
+			if(NewPath.Count <= 1)
+			{
+				GetNewPath();
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	public void NotifyRecievers()
+	{
+		BroadcastMessage("RecalculatePath", false, SendMessageOptions.DontRequireReceiver);
 	}
 }

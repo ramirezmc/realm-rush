@@ -4,39 +4,49 @@ using UnityEngine;
 
 public class EnemyMover : MonoBehaviour
 {
-	[SerializeField] List<Waypoint> path = new List<Waypoint>();
+	
 	[SerializeField] [Range(0f, 5f)] float travelSpeed = 1;
+	List<Node> path = new List<Node>();
+	GridManager gridManager;
+	Pathfinder pathFinder;
 	Enemy enemy;
-	void OnEnable()
+	protected void Awake()
 	{
 		enemy = GetComponent<Enemy>();
-		FindPath();
-		StartCoroutine (FollowPath());
+		gridManager = FindObjectOfType<GridManager>();
+		pathFinder = FindObjectOfType<Pathfinder>();
 	}
-	
+	void OnEnable()
+	{
+		ReturnToStart();
+		RecalculatePath(true);
+	}
 	void OnDisable()
 	{
 		ReturnToStart();
 	}
 	
-	void FindPath()
+	void RecalculatePath(bool resetPath)
 	{
-		path.Clear();
-		
-		GameObject waypoints = GameObject.FindGameObjectWithTag("Path");
-		foreach (Transform points in waypoints.transform)
+		Vector2Int coordinates = new Vector2Int();
+		if(resetPath)
 		{
-			Waypoint waypoint = points.GetComponent<Waypoint>();
-			if(waypoint != null)
-			{
-				path.Add(waypoint);
-			}
+			coordinates = pathFinder.StartCoords;
 		}
+		else
+		{
+			coordinates = gridManager.GetCoordinatesFromPosition(transform.position);
+		}
+		
+		StopAllCoroutines();
+		path.Clear();
+		path = pathFinder.GetNewPath(coordinates);
+		StartCoroutine (FollowPath());
 	}
 	
 	void ReturnToStart()
 	{
-		transform.position = path[0].transform.position;
+		transform.position = gridManager.GetPositionFromCoordinates(pathFinder.StartCoords);
 	}
 	
 	void FinishPath()
@@ -47,12 +57,14 @@ public class EnemyMover : MonoBehaviour
 	
 	IEnumerator FollowPath()
 	{
-		foreach (Waypoint point in path)
+		for(int i = 1; i < path.Count; i++)
 		{
 			Vector3 startPosition = transform.position;
-			Vector3 endPosition = point.transform.position;
+			Vector3 endPosition = gridManager.GetPositionFromCoordinates(path[i].coordinates);
 			float travelPercent = 0f;
+			
 			transform.LookAt(endPosition);
+			
 			while(travelPercent < 1)
 			{
 				travelPercent+=Time.deltaTime * travelSpeed;

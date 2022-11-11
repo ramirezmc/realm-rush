@@ -5,7 +5,7 @@ MonoImporter:
   serializedVersion: 2
   defaultReferences:
   - towerPrefab: {fileID: 3219458064393657486, guid: 5e05760ff2873a24780f1d921e7614c5, type: 3}
-  executionOrder: 0
+  executionOrder: -10
   icon: {instanceID: 0}
   userData: 
   assetBundleName: 
