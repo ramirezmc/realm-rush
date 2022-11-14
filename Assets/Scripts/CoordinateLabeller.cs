@@ -26,7 +26,6 @@ public class CoordinateLabeller : MonoBehaviour
     {
 	    if(!Application.isPlaying)
 	    {
-	    	label.enabled = true;
 	    	DisplayCoordinates();
 	    	UpdateObjectName();
 	    }
